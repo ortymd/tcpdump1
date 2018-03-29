@@ -1,0 +1,4 @@
+read libpcap doc
+setup simple sniffer for eth inface
+	get available devices: 
+	get all packets
