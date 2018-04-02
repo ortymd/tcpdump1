@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
+project(tcpdump1)
+set (EXECUTABLE_OUTPUT_PATH ./bin)
+set (CMAKE_BUILD_DIRECTORY ./build)
+add_executable(tcpdump1 main.c)
