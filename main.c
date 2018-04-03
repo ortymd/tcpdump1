@@ -8,7 +8,6 @@
 #include <pcap.h>
 #include "functions.h"
 
-FILE *logfile;
 struct sockaddr_in source,dest;
 
 int main(int argc, char **argv) {
@@ -16,7 +15,9 @@ int main(int argc, char **argv) {
 	int sock_raw;
 	struct sockaddr_in saddr;
 	const size_t bufsize = 4096;
+	const size_t macsize = 6;	// size of MAC address
 	const size_t saddr_size = sizeof saddr;
+	FILE *log_out, *log_in;
 	size_t data_size;
   unsigned char *buffer = (unsigned char *) malloc(bufsize); 
 
@@ -24,35 +25,43 @@ int main(int argc, char **argv) {
 	if(sock_raw < 0)
 	{
 		perror( "error in socket\n" );
-		return -1;
+		return 1;
 	}
 
-  logfile=fopen("log.txt","w");
-	if(logfile==NULL)
+	if(open_files(&log_out, &log_in) != 0)
 	{
-					printf("Unable to create log.txt file.");
+		perror("Unable to create log.txt file.");
+		return 1;
 	}
+
 	printf("Starting...\n");
 
-	while (1)
-	{
-		data_size = recvfrom(sock_raw , buffer , bufsize , 0 , (struct sockaddr*)&saddr , (socklen_t*)&saddr_size);
+	data_size = recvfrom(sock_raw , buffer , bufsize , 0 , (struct sockaddr*)&saddr , (socklen_t*)&saddr_size);
 
-		print_ethernet_header(buffer);
-	}
+	print_ethernet_header(buffer, log_out, log_in);
 
 	return 0;
 }
 
-void print_ethernet_header(unsigned char* buffer)
+int open_files(FILE **log_out, FILE **log_in)
 {
-        struct ethhdr *eth = (struct ethhdr *)buffer;
+  *log_out=fopen("log_out.txt","a");
+  *log_in=fopen("log_in.txt","a");
+	if (log_in && log_out != NULL)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+void print_ethernet_header(unsigned char* buffer, FILE *log_out, FILE *log_in)
+{
+	struct ethhdr *eth = (struct ethhdr *)buffer;
 
-        fprintf(logfile , "\n");
-        fprintf(logfile , "Ethernet Header\n");
-        fprintf(logfile , "   |-Destination Address : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
-        fprintf(logfile , "   |-Source Address      : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
-        fprintf(logfile , "   |-Protocol            : %x \n",eth->h_proto);
+	fprintf(log_out , "dest : %.2x%.2x%.2x%.2x%.2x%.2x \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
+	fprintf(log_in , "source: %.2x%.2x%.2x%.2x%.2x%.2x \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
 }
 
 char *get_active_devices(void)
