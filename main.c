@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
 	struct sockaddr_in saddr;
 	const size_t bufsize = 4096;
 	const size_t macsize = 6;	// size of MAC address
+	const size_t entries = 1<<10;
 	const size_t saddr_size = sizeof saddr;
 	FILE *log_out, *log_in;
 	size_t data_size;
