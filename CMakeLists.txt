@@ -7,5 +7,5 @@ include_directories(pcap_include glib_include/glib-2.0 glib_include/lib/glib-2.0
 link_directories(glib_lib)
 link_libraries(gmodule-2.0 pthread glib-2.0)
 add_compile_options(-g3 -Wall)
-add_executable(tcpdump1 main.c)
+add_executable(tcpdump1 main.c functions.c)
 target_link_libraries(tcpdump1 libpcap.a)
