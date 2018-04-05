@@ -3,12 +3,25 @@
 #include <sys/socket.h>
 #include <netinet/if_ether.h>    //For ETH_P_ALL
 #include <net/ethernet.h>        //For ether_header
-#include<arpa/inet.h>
+#include <arpa/inet.h>
+#include <gmodule.h>
+#include <string.h>
 
 #include <pcap.h>
 #include "functions.h"
 
 struct sockaddr_in source,dest;
+
+gint comparator(gconstpointer mac1, gconstpointer mac2)
+{
+	return(strncmp((const char*)mac1, (const char*)mac2, 6));
+}
+
+int create_tree()
+{
+	GTree *tree = g_tree_new(comparator);
+	return 0;
+}
 
 int main(int argc, char **argv) {
 
