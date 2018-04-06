@@ -1,60 +1,81 @@
 #include "functions.h"
 #include <linux/if_ether.h>
 
-GTree *tree_dest;
-GTree *tree_source;
-static FILE *log_dest;
 
-static mac_data mac_dest_arr[256] = {0, {'0','0','0','0','0','0','0','0','0','0','0','0','\0'}};
-static mac_data mac_source_arr[256] = {0, {'0','0','0','0','0','0','0','0','0','0','0','0','\0'}};
+#define sz 32
+mac_data mac_dest_arr[sz];
+mac_data mac_source_arr[sz];
+static unsigned dest_sz=0, source_sz=0;
 
 int store_mac(unsigned char *bufptr)
 {
-		struct ethhdr *mac_dest = NULL;
-		struct ethhdr *mac_source = NULL;
-		get_mac_hdr(bufptr, &mac_dest, &mac_source);
+		static char mac_dest[macsize +1];
+		static char mac_source[macsize +1];
+		static mac_data *mac_tmp;
+		get_mac(bufptr, mac_dest, mac_source);
 
-		void *lookup_addr = NULL;
-		void *lookup_cnt = NULL;
-
-		if(g_tree_lookup_extended(tree_dest, mac_dest, &lookup_addr, &lookup_cnt) )
+		mac_tmp = find(mac_dest, mac_dest_arr, dest_sz);
+		if( mac_tmp == NULL )
 		{
-			*(unsigned*)lookup_cnt += 1;
+			strcpy(mac_dest_arr[dest_sz].addr, mac_dest);
+			mac_dest_arr[dest_sz].cnt += 1;
+			++dest_sz;
 		}
 		else
 		{
-			g_tree_insert(tree_dest, mac_dest, 1); 
+			mac_tmp->cnt += 1;
+		}
+
+		mac_tmp = find(mac_source, mac_source_arr, source_sz);
+		if( mac_tmp == NULL )
+		{
+			strcpy(mac_source_arr[source_sz].addr, mac_source);
+			mac_source_arr[source_sz].cnt += 1;
+			++source_sz;
+		}
+		else
+		{
+			mac_tmp->cnt += 1;
 		}
 
 	return 0;
 }
 
-int dump_tree(GTree *tree)
+mac_data* find(char *mac_addr, mac_data *arr, size_t space)
 {
+	for (unsigned i=0; i < space; ++i)
+	{
+		if(strcmp(arr[i].addr, mac_addr) == 0)
+			return &arr[i];
+	}
+	return NULL;
+}
+
+
+int dump_data(mac_data *dest, mac_data *source)
+{
+	FILE *log_dest;
+	FILE *log_source;
 	log_dest = fopen("log_dest.txt", "a");
-	g_tree_foreach(tree, dump_node, 0);
+	log_source = fopen("log_source.txt", "a");
+
+	for( unsigned k = 0; k < dest_sz; ++k)
+	{
+		fprintf(log_dest, "%s\t%d\n", dest[k].addr, dest[k].cnt);
+	}
+
+	for( unsigned k = 0; k < source_sz; ++k)
+	{
+		fprintf(log_source, "%s\t%d\n", source[k].addr, source[k].cnt);
+	}
+
 	fclose(log_dest);
-}
+	fclose(log_source);
 
-gboolean dump_node(void *mac_addr, void *cnt)
-{
-	fprintf(log_dest, "%s\t%d\n",  mac_addr, cnt);
-	return TRUE;
-}
-
-int create_trees()
-{
-	tree_dest = g_tree_new(comparator);
-	tree_source = g_tree_new(comparator);
 	return 0;
 }
 
-gint comparator(gconstpointer mac1, gconstpointer mac2)
-{
-	return(strncmp((const char*)mac1, (const char*)mac2, macsize));
-}
-
-int get_mac_hdr(const unsigned char *bufptr, 	char **mac_dest, char **mac_source)
+int get_mac_hdr(const unsigned char *bufptr, unsigned	char **mac_dest, unsigned char **mac_source)
 {
 	struct ethhdr *eth = (struct ethhdr *)bufptr;
 	*mac_dest = eth->h_dest;
@@ -63,16 +84,16 @@ int get_mac_hdr(const unsigned char *bufptr, 	char **mac_dest, char **mac_source
 	return 0;
 }
 
-int get_mac(const unsigned char *bufptr, mac_data *mac_dest,  mac_data *mac_source)
+int get_mac(const unsigned char *bufptr, char *mac_dest,  char *mac_source)
 {
 	struct ethhdr *eth = (struct ethhdr *)bufptr;
 
-	sprintf(mac_dest->addr,
+	sprintf(mac_dest,
 	 "%.2x%.2x%.2x%.2x%.2x%.2x",
 	  eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] 
 	);
 
-	sprintf(mac_source->addr,
+	sprintf(mac_source,
 	 "%.2x%.2x%.2x%.2x%.2x%.2x",
 	  eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] 
 	);

@@ -4,8 +4,8 @@
 #define macsize 12 
 typedef struct
 {
-	unsigned cnt;
 	char addr[macsize+1];
+	unsigned cnt;
 } mac_data;
 
 #endif

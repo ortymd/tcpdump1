@@ -9,7 +9,8 @@
 #include "functions.h"
 
 struct sockaddr_in source,dest;
-extern GTree *tree_dest;
+extern mac_data mac_dest_arr[];
+extern mac_data mac_source_arr[];
 
 int main(int argc, char **argv) {
 
@@ -35,7 +36,6 @@ int main(int argc, char **argv) {
 		perror("Unable to create log.txt file.");
 		return 1;
 	}
-	create_trees();
 
 	printf("Starting...\n");
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 		space_left -= data_size;
 	}
 
-	dump_tree(tree_dest);
+	dump_data(mac_dest_arr, mac_source_arr);
 
 	return 0;
 }
