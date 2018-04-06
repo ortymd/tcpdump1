@@ -8,6 +8,14 @@ log_source.txt
 
 Once data is dumped, program exits.
 
+Note that in order to run the program you need root privileges.
+The reason is that program create a raw socket() in order to
+capture ethernet frames. And raw socket() can be created only
+by users with elevated privileges.
+See packet(7) man page and here is a nice link about raw sockets:
+
+http://opensourceforu.com/2015/03/a-guide-to-using-raw-sockets/
+
 INSTALL
 ========
 See INSTALL file
