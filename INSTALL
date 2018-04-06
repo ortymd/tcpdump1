@@ -1,0 +1,8 @@
+To build you need  cmake (VERSION 3.5) at least.
+
+Once cmake and make is available, build by running
+$ ./build_tcpdump1
+
+Executable file is located at ./bin/tcpdump1
+To remove cmake build files and directories run
+$ ./rm_all

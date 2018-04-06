@@ -1,0 +1,13 @@
+This is a very simplified version of tcpdump.
+At the moment on this branch only MAC addresses are logged.
+Logging is conducted in a small array.
+Once the array is full, logs are dumped into 2 files:
+
+log_dest.txt
+log_source.txt
+
+Once data is dumped, program exits.
+
+INSTALL
+========
+See INSTALL file
