@@ -1,5 +1,6 @@
-#include "functions.h"
+#include <string.h>
 #include <linux/if_ether.h>
+#include "functions.h"
 
 #define sz 32
 mac_data mac_dest_arr[sz];
