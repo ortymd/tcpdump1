@@ -1,7 +1,6 @@
 #include "functions.h"
 #include <linux/if_ether.h>
 
-
 #define sz 32
 mac_data mac_dest_arr[sz];
 mac_data mac_source_arr[sz];
@@ -51,7 +50,6 @@ mac_data* find(char *mac_addr, mac_data *arr, size_t space)
 	return NULL;
 }
 
-
 int dump_data(mac_data *dest, mac_data *source)
 {
 	FILE *log_dest;
@@ -71,15 +69,6 @@ int dump_data(mac_data *dest, mac_data *source)
 
 	fclose(log_dest);
 	fclose(log_source);
-
-	return 0;
-}
-
-int get_mac_hdr(const unsigned char *bufptr, unsigned	char **mac_dest, unsigned char **mac_source)
-{
-	struct ethhdr *eth = (struct ethhdr *)bufptr;
-	*mac_dest = eth->h_dest;
-	*mac_source = eth->h_source;
 
 	return 0;
 }
