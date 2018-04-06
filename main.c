@@ -15,13 +15,12 @@ int main(int argc, char **argv) {
 
 	int sock_raw;
 	struct sockaddr_in saddr;
-	const size_t entries = 1<<10;
 	const size_t saddr_size = sizeof saddr;
 	FILE *log_dest, *log_source;
 	size_t data_size;
 	const size_t bufsize = 4096;
 	size_t space_left = bufsize;
-  unsigned char *buffer = (unsigned char *) malloc(bufsize); 
+  unsigned char *buffer = malloc(bufsize); 
 	unsigned char *bufptr = buffer;
 
 	sock_raw = socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
@@ -44,6 +43,7 @@ int main(int argc, char **argv) {
 	{
 		data_size = recvfrom(sock_raw , bufptr, space_left, 0, (struct sockaddr*)&saddr , (socklen_t*)&saddr_size);
 		store_mac(bufptr);
+		print_ethernet_header(bufptr, log_dest, log_source);
 		bufptr += data_size;
 		space_left -= data_size;
 	}
@@ -73,20 +73,4 @@ void print_ethernet_header(unsigned char* buffer, FILE *log_out, FILE *log_in)
 
 	fprintf(log_out , "dest : %.2x%.2x%.2x%.2x%.2x%.2x \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
 	fprintf(log_in , "source: %.2x%.2x%.2x%.2x%.2x%.2x \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
-}
-
-char *get_active_devices(void)
-{
-    char *device; /* Name of device (e.g. eth0, wlan0) */
-    char error_buffer[PCAP_ERRBUF_SIZE]; /* Size defined in pcap.h */
-
-    /* Find a device */
-    device = pcap_lookupdev(error_buffer);
-    if (device == NULL) {
-        printf("Error finding device: %s\n", error_buffer);
-        return 1;
-    }
-
-    printf("Network device found: %s\n", device);
-    return 0;
 }
