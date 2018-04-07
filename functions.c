@@ -1,44 +1,54 @@
 #include <string.h>
 #include <linux/if_ether.h>
+#include <semaphore.h>
+
 #include "functions.h"
 
 #define sz 32
-mac_data mac_dest_arr[sz];
+mac_data mac_dest_arr[sz];	// here we store macs and their quantity
 mac_data mac_source_arr[sz];
 static unsigned dest_sz=0, source_sz=0;
+extern sem_t bin_sem;
 
-int store_mac(unsigned char *bufptr)
+void* store_mac(void *arr)
 {
 		static char mac_dest[macsize +1];
 		static char mac_source[macsize +1];
 		static mac_data *mac_tmp;
-		get_mac(bufptr, mac_dest, mac_source);
+		char **arr_ptr = (char**)arr;
 
-		mac_tmp = find(mac_dest, mac_dest_arr, dest_sz);
-		if( mac_tmp == NULL )
-		{
-			strcpy(mac_dest_arr[dest_sz].addr, mac_dest);
-			mac_dest_arr[dest_sz].cnt += 1;
-			++dest_sz;
-		}
-		else
-		{
-			mac_tmp->cnt += 1;
+		sem_wait(&bin_sem);
+		while (1) {
+			get_mac(*arr_ptr, mac_dest, mac_source);
+
+			mac_tmp = find(mac_dest, mac_dest_arr, dest_sz);
+			if( mac_tmp == NULL )
+			{
+				strcpy(mac_dest_arr[dest_sz].addr, mac_dest);
+				mac_dest_arr[dest_sz].cnt += 1;
+				++dest_sz;
+			}
+			else
+			{
+				mac_tmp->cnt += 1;
+			}
+
+			mac_tmp = find(mac_source, mac_source_arr, source_sz);
+			if( mac_tmp == NULL )
+			{
+				strcpy(mac_source_arr[source_sz].addr, mac_source);
+				mac_source_arr[source_sz].cnt += 1;
+				++source_sz;
+			}
+			else
+			{
+				mac_tmp->cnt += 1;
+			}
+			sem_wait(&bin_sem);
+			arr_ptr++;
 		}
 
-		mac_tmp = find(mac_source, mac_source_arr, source_sz);
-		if( mac_tmp == NULL )
-		{
-			strcpy(mac_source_arr[source_sz].addr, mac_source);
-			mac_source_arr[source_sz].cnt += 1;
-			++source_sz;
-		}
-		else
-		{
-			mac_tmp->cnt += 1;
-		}
-
-	return 0;
+	return NULL;
 }
 
 mac_data* find(char *mac_addr, mac_data *arr, size_t space)
@@ -74,9 +84,9 @@ int dump_data(mac_data *dest, mac_data *source)
 	return 0;
 }
 
-int get_mac(const unsigned char *bufptr, char *mac_dest,  char *mac_source)
+int get_mac(const char *arr_ptr, char *mac_dest,  char *mac_source)
 {
-	struct ethhdr *eth = (struct ethhdr *)bufptr;
+	struct ethhdr *eth = (struct ethhdr *)arr_ptr;
 
 	sprintf(mac_dest,
 	 "%.2x%.2x%.2x%.2x%.2x%.2x",
