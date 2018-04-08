@@ -10,16 +10,15 @@ mac_data mac_source_arr[sz];
 static unsigned dest_sz=0, source_sz=0;
 extern sem_t bin_sem;
 
-void* store_mac(void *arr)
+void* store_mac(void *arr_ptr)
 {
 		static char mac_dest[macsize +1];
 		static char mac_source[macsize +1];
 		static mac_data *mac_tmp;
-		char **arr_ptr = (char**)arr;
 
 		sem_wait(&bin_sem);
 		while (1) {
-			get_mac(*arr_ptr, mac_dest, mac_source);
+			get_mac(*(char**)arr_ptr, mac_dest, mac_source);
 
 			mac_tmp = find(mac_dest, mac_dest_arr, dest_sz);
 			if( mac_tmp == NULL )
@@ -44,8 +43,8 @@ void* store_mac(void *arr)
 			{
 				mac_tmp->cnt += 1;
 			}
+			arr_ptr = (char**)arr_ptr +1;
 			sem_wait(&bin_sem);
-			arr_ptr++;
 		}
 
 	return NULL;

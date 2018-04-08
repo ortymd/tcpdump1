@@ -50,15 +50,18 @@ int main(int argc, char **argv) {
 	while (space_left > 0)
 	{
 		data_size = recvfrom(sock_raw , bufptr, space_left, 0, (struct sockaddr*)&saddr , (socklen_t*)&saddr_size);
+
 		*arr_ptr = bufptr;
-		sem_post(&bin_sem);
+		arr_ptr++;
 		bufptr += data_size;
 		space_left -= data_size;
+		sem_post(&bin_sem);
+		// sem_wait
 	}
 
+	res = pthread_join(store_mac_thread, &thread_res);
 	dump_data(mac_dest_arr, mac_source_arr);
 
-	res = pthread_join(store_mac_thread, &thread_res);
 	sem_destroy(&bin_sem);
 
 	return 0;
