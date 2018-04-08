@@ -9,6 +9,7 @@ mac_data mac_dest_arr[sz];	// here we store macs and their quantity
 mac_data mac_source_arr[sz];
 static unsigned dest_sz=0, source_sz=0;
 extern sem_t bin_sem;
+extern char stop;
 
 void* store_mac(void *arr_ptr)
 {
@@ -44,9 +45,16 @@ void* store_mac(void *arr_ptr)
 				mac_tmp->cnt += 1;
 			}
 			arr_ptr = (char**)arr_ptr +1;
-			sem_wait(&bin_sem);
+
+			if(stop && *(char**)arr_ptr == NULL){
+				break;
+			}
+			else{
+				sem_wait(&bin_sem);
+			}
 		}
 
+	printf("thread 2 finish\n");
 	return NULL;
 }
 

@@ -15,6 +15,7 @@ extern mac_data mac_source_arr[];
 
 
 sem_t bin_sem;
+char stop = 0;
 
 int main(int argc, char **argv) {
 
@@ -23,7 +24,7 @@ int main(int argc, char **argv) {
 	char buffer[bufsize]; 
 	char *bufptr = buffer;
 
-	const size_t arr_size = 1<<10;
+	const size_t arr_size = 1<<12;
 	char *arr[arr_size];
 	char **arr_ptr = arr;
 
@@ -58,7 +59,8 @@ int main(int argc, char **argv) {
 		sem_post(&bin_sem);
 		// sem_wait
 	}
-
+	stop = 1;	// break function in thread 2
+	printf("Main thread finished\n");
 	res = pthread_join(store_mac_thread, &thread_res);
 	dump_data(mac_dest_arr, mac_source_arr);
 
