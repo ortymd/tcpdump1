@@ -1,1 +1,3 @@
 This is a simple sniffer application written with libpcap source files.
+For this branch libpcap is compiled preliminary from github repo and linked statically into
+application.
