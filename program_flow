@@ -8,3 +8,6 @@ pcap_datalink(handle)		-- to check if device supports datalink layer
 pcap_compile()		--	to setup net filtering(MAC/IP) in our case
 pcap_setfilter()
 
+
+check options		--	getopt()
+check devices
