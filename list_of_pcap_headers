@@ -1,0 +1,7 @@
+./pcap/pcap.h
+./pcap/funcattrs.h
+./pcap/compiler-tests.h
+./pcap/pcap-inttypes.h
+./pcap/bpf.h
+./pcap/dlt.h
+./pcap/bpf.h
