@@ -2,6 +2,7 @@
 #include <pcap.h>
 #include <string.h>
 #include <linux/if_ether.h>
+#include <netinet/ether.h>
 
 #include <functions.h>
 #include <mac_data.h>
@@ -9,6 +10,7 @@
 static const unsigned input_sz = 1<<3;
 #define arr_sz 1<<5 
 mac_data mac_arr[arr_sz];	// here we store macs and their quantity
+static unsigned cur_sz = 0;
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
 	char user_input[input_sz];
@@ -66,7 +68,6 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	static u_char mac_dest[macsize];
 	static u_char mac_src[macsize];
 	static mac_data *mac_tmp;
-	static unsigned cur_sz = 0;
 
 	get_mac(bufptr, mac_dest, mac_src);	
 
@@ -86,7 +87,7 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	}
 }
 
-mac_data* find(char *mac_dest, char *mac_src, mac_data *arr, unsigned cur_sz) {
+mac_data* find(u_char *mac_dest, u_char *mac_src, mac_data *arr, unsigned cur_sz) {
 	for (unsigned i=0; i < cur_sz; ++i) {
 		for (unsigned j=0; j < macsize; ++j){
 			if( (mac_dest[j] ^ arr[i].dest[j]) == 0 && (mac_src[j] ^ arr[i].src[j]) == 0 ) 
@@ -101,9 +102,34 @@ int get_mac(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
 	struct ethhdr *eth = (struct ethhdr *)bufptr;
 
 	for (unsigned j=0; j < macsize; ++j){
-			mac_dest[j] ^= eth->h_dest[j];
-			mac_src[j] ^= eth->h_source[j];
+			mac_dest[j] |= eth->h_dest[j];
+			mac_src[j] |= eth->h_source[j];
 	}
 
+	return 0;
+}
+
+int get_mac1(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
+{
+	struct ethhdr *eth = (struct ethhdr *)bufptr;
+
+	for (unsigned j=0; j < macsize; ++j){
+			mac_dest[j] |= eth->h_dest[j];
+			mac_src[j] |= eth->h_source[j];
+	}
+
+	return 0;
+}
+
+int dump_data() {
+	FILE *log;
+	log = fopen("log.txt", "a");
+
+	for( unsigned i = 0; i < cur_sz; ++i) {
+			fprintf(log, "dest:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].dest[0], mac_arr[i].dest[1],mac_arr[i].dest[2],mac_arr[i].dest[3],mac_arr[i].dest[4],mac_arr[i].dest[5]);
+			fprintf(log, "src:\t%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_arr[i].src[0], mac_arr[i].src[1],mac_arr[i].src[2],mac_arr[i].src[3],mac_arr[i].src[4],mac_arr[i].src[5]);
+			fprintf(log, "count:\t%d\n", mac_arr[i].cnt);
+	}
+	fclose(log);
 	return 0;
 }

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "pcap_loop failed:\t%s\n", errbuf);
 	}
 	else if(result == 0){
-		// dump_data
+		dump_data();
 	}
 
 	
