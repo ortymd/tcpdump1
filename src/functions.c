@@ -4,33 +4,31 @@
 #include <functions.h>
 
 static const unsigned sz = 1<<3;
-enum status_codes{not_found = -2, exit = -1};
 
-int request_device(pcap_if_t **alldevsp){
-
-	enum status_codes{not_found = -2, exit = -1};
+pcap_if_t* request_device(pcap_if_t **alldevsp){
 	char user_input[sz];
 	print_active_devs(alldevsp);
+	pcap_if_t *chosen_dev = NULL;
 
-	memset (user_input, 0, sz);
 	int index = not_found;
-	while (index == not_found){
+	while ( chosen_dev == NULL ) {
 		printf("Choose device. Input 0 for exit:\n");
-		scanf("%s", user_input);
+		scanf("%szs", user_input);	//	sz indicates max len to scan. see man 3 scanf(line 83)
 
 		if(strncmp(user_input, "0", 1) == 0){
-			index = exit;
+			break;
 		}
 		else{
-			index = find_device(user_input, alldevsp);
-			if ( index != not_found ){
+			chosen_dev = find_device(user_input, alldevsp);
+			if (chosen_dev != NULL){
 				break;
 			}
 		}
 		printf("Device not found.\n");
 		print_active_devs(alldevsp);
 	}
-	return index;
+
+	return chosen_dev;
 }
 
 void print_active_devs(pcap_if_t **alldevsp){
