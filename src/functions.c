@@ -7,13 +7,14 @@ static const unsigned sz = 1<<3;
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
 	char user_input[sz];
-	print_active_devs(alldevsp);
 	pcap_if_t *chosen_dev = NULL;
 
-	int index = not_found;
+	print_active_devs(alldevsp);
 	while ( chosen_dev == NULL ) {
 		printf("Choose device. Input 0 for exit:\n");
-		scanf("%szs", user_input);	//	sz indicates max len to scan. see man 3 scanf(line 83)
+		FILE *in = fdopen(stdin->_fileno, "r");
+		fread(user_input, 1, sz, in);
+		//scanf("%8s", user_input);	//	sz indicates max len to scan. see man 3 scanf(line 83)
 
 		if(strncmp(user_input, "0", 1) == 0){
 			break;
@@ -24,7 +25,7 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 				break;
 			}
 		}
-		printf("Device not found.\n");
+		printf("\nDevice not found.\n");
 		print_active_devs(alldevsp);
 	}
 
@@ -32,27 +33,26 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 }
 
 void print_active_devs(pcap_if_t **alldevsp){
-	pcap_if_t *check = alldevsp[0];
+	pcap_if_t *dev = alldevsp[0]; 
 	printf("Checking active devices...\n");
-	while (check != NULL && (check->flags & PCAP_IF_UP)){
-		printf("Device:\t%s\n", check->name);	
-		check = check->next;
+
+	while (dev != NULL && (dev->flags & PCAP_IF_UP)){
+		printf("Device:\t%s\n", dev->name);	
+		dev = dev->next;
 	}
 }
 
-int find_device(char *user_input, pcap_if_t **alldevsp){
-	int index = not_found;
-	int iter = 0;
-	pcap_if_t *check = alldevsp[iter];
+pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp){
+	pcap_if_t *check = alldevsp[0]; 
+	pcap_if_t *dev = NULL; 
 
-	while (check != NULL && (check->flags & PCAP_IF_UP)){
+	while (dev == NULL && (check->flags & PCAP_IF_UP)){
 		if(strncmp(user_input, check->name, sz) == 0){
-			index = iter;
+			dev = check;
 			break;
 		}
 		check = check->next;
-		++iter;
 	}
 
-	return index;
+	return dev;
 }
