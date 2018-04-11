@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pcap.h>
+#include <functions.h>
 
 int main(int argc, char *argv[])
 {
@@ -14,14 +15,12 @@ int main(int argc, char *argv[])
 		return(2);
   }
 	
-	unsigned i = 0;
-	while(alldevsp[i] != NULL){
-		printf("Device %d:\n %s\n", i, alldevsp[i]->name);
-		++i;
+	int i = request_device(alldevsp);
+	if ( i == -1) {
+		printf("Exiting.\n");
+		return 0;
 	}
 
-	// if( dev_handle = pcap_open_live(alldevsp[0]
-	
 	return(0);
 }
 
