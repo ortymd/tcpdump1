@@ -33,6 +33,14 @@ int main(int argc, char *argv[])
 	}
 
 	result = pcap_loop(dev_handle, cnt, parse_packet, NULL);
+	if(result == -1){
+		fprintf(stderr, "pcap_loop failed:\t%s\n", errbuf);
+	}
+	else if(result == 0){
+		// dump_data
+	}
+
+	
 
 	printf("Done.\n");
 	return 0;

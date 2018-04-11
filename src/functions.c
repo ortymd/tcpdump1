@@ -8,8 +8,7 @@
 
 static const unsigned input_sz = 1<<3;
 #define arr_sz 1<<5 
-mac_data mac_dest_arr[arr_sz];	// here we store macs and their quantity
-mac_data mac_source_arr[arr_sz];
+mac_data mac_arr[arr_sz];	// here we store macs and their quantity
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
 	char user_input[input_sz];
@@ -63,26 +62,48 @@ pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp){
 	return dev;
 }
 
-void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *buf_ptr){
-	static char mac_dest[macsize +1];
-	static char mac_source[macsize +1];
+void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
+	static u_char mac_dest[macsize];
+	static u_char mac_src[macsize];
+	static mac_data *mac_tmp;
+	static unsigned cur_sz = 0;
 
-	get_mac(buf_ptr, mac_dest, mac_source);	
+	get_mac(bufptr, mac_dest, mac_src);	
+
+	mac_tmp = find(mac_dest, mac_src, mac_arr, cur_sz);
+	if( mac_tmp == NULL )
+	{
+		for (unsigned j=0; j < macsize; ++j){
+			mac_arr[cur_sz].dest[j] |= mac_dest[j];
+			mac_arr[cur_sz].src[j] |= mac_src[j];
+		}
+		mac_arr[cur_sz].cnt += 1;
+		++cur_sz;
+	}
+	else
+	{
+		mac_tmp->cnt += 1;
+	}
 }
 
-int get_mac(const u_char *bufptr, char *mac_dest,  char *mac_source)
+mac_data* find(char *mac_dest, char *mac_src, mac_data *arr, unsigned cur_sz) {
+	for (unsigned i=0; i < cur_sz; ++i) {
+		for (unsigned j=0; j < macsize; ++j){
+			if( (mac_dest[j] ^ arr[i].dest[j]) == 0 && (mac_src[j] ^ arr[i].src[j]) == 0 ) 
+				return &arr[j];
+		}
+	}
+	return NULL;
+}
+
+int get_mac(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
 {
 	struct ethhdr *eth = (struct ethhdr *)bufptr;
 
-	sprintf(mac_dest,
-	 "%.2x%.2x%.2x%.2x%.2x%.2x",
-	  eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] 
-	);
-
-	sprintf(mac_source,
-	 "%.2x%.2x%.2x%.2x%.2x%.2x",
-	  eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] 
-	);
+	for (unsigned j=0; j < macsize; ++j){
+			mac_dest[j] ^= eth->h_dest[j];
+			mac_src[j] ^= eth->h_source[j];
+	}
 
 	return 0;
 }
