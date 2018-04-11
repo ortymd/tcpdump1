@@ -4,6 +4,7 @@ This is just a simple text file for different notes/ideas and program design
 
 pcap_lookupdevs()
 pcap_open_live()
+pcap_loop()
 pcap_datalink(handle)		-- to check if device supports datalink layer
 pcap_compile()		--	to setup net filtering(MAC/IP) in our case
 pcap_setfilter()

@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
 	const size_t num_of_devices = 1<<3;
 	int snaplen = 1<<12;
 	int timeout = 1<<10;
-	int promisc_mode = 0;
+	int promisc_mode = 0, result;
+	int cnt = 1<<5;		// num of packets to parse. -1 for infinity
 	pcap_if_t **alldevsp = malloc( num_of_devices * sizeof(pcap_if_t) );
 	pcap_if_t *chosen_dev = NULL;
 	pcap_t *dev_handle;
@@ -31,6 +32,9 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
+	result = pcap_loop(dev_handle, cnt, parse_packet, NULL);
+
+	printf("Done.\n");
 	return 0;
 }
 
