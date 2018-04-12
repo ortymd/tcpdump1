@@ -2,7 +2,7 @@
 #include <log_data.h>
 #include <signal.h>
 
-#define TEST
+//#define TEST
 pcap_if_t* request_device(pcap_if_t **alldevsp);
 void print_active_devs(pcap_if_t **alldevsp);
 pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp);

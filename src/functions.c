@@ -8,10 +8,10 @@
 #include <functions.h>
 #include <log_data.h>
 
-static const unsigned input_sz = 1<<3;
 #define arr_sz 1<<5 
 log_data log_arr[arr_sz];	// here we store logs and their quantity
 static unsigned cur_sz = 0;
+static const unsigned input_sz = 1<<3;
 extern pcap_t *dev_handle;
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
@@ -19,13 +19,18 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 	pcap_if_t *chosen_dev = NULL;
 
 	print_active_devs(alldevsp);
+	FILE *f = fdopen(0, "r");
 	while ( chosen_dev == NULL ) {
 #ifdef TEST
 		strncpy(user_input, "enp0s8", 6);
 		printf("Chosen device: %s\n", user_input);
 #else
 		printf("Input device. Input 0 for exit:\n");
-		scanf("%[^\n]%*c", user_input);
+
+		fgets(user_input, input_sz, f);
+		unsigned len = strlen(user_input) - 1;
+		if(user_input[len] == '\n')
+			user_input[len] = '\0';
 #endif
 
 		if(strncmp(user_input, "0", 1) == 0){
@@ -41,6 +46,7 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 		print_active_devs(alldevsp);
 	}
 
+	fclose(f);
 	return chosen_dev;
 }
 
@@ -70,11 +76,11 @@ pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp){
 }
 
 void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
-	static u_char *mac_dest;
-	static u_char *mac_src;
-	static u_char *ip_dest;
-	static u_char *ip_src;
-	static log_data *log_tmp;
+	static u_char *mac_dest = NULL;
+	static u_char *mac_src = NULL;
+	static u_char *ip_dest = NULL;
+	static u_char *ip_src = NULL;
+	static log_data *log_tmp = NULL;
 
 	get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src);
 
@@ -92,10 +98,6 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	{
 		log_tmp->cnt += 1;
 	}
-	mac_dest = NULL;
-	mac_src = NULL;
-	ip_dest = NULL;
-	ip_src = NULL;
 }
 
 log_data* find(u_char *ip_dest, u_char *ip_src, log_data *arr, unsigned cur_sz) {

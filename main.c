@@ -13,11 +13,7 @@ int main(int argc, char *argv[])
 	int snaplen = 1<<12;
 	int timeout = 1<<10;
 	int promisc_mode = 0, result;
-#ifdef TEST
 	int	cnt = -1;
-#else
-	int cnt = 1<<10;		// num of packets to parse. -1 for infinity
-#endif
 	pcap_if_t **alldevsp = malloc( num_of_devices * sizeof(pcap_if_t) );
 	pcap_if_t *chosen_dev = NULL;
 
