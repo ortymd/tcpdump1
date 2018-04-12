@@ -1,3 +1,10 @@
-This is a simple sniffer application written with libpcap source files.
-For this branch libpcap is compiled preliminary from github repo and linked statically into
+This is a simple sniffer application written with libpcap.
+
+1. For this branch libpcap is compiled preliminary from github repo and linked statically into
 application.
+
+2. Application catches only a limited number of packets set in main.c
+	main.c: int cnt = 1<<5;		// num of packets to parse. -1 for infinity
+	Plan to impove this unlimited in next commit
+
+3. Only MAC addresses are captured. Plan to add IP in next commit.
