@@ -8,3 +8,5 @@ application.
 	Plan to impove this unlimited in next commit
 
 3. Only MAC addresses are captured. Plan to add IP in next commit.
+
+4. To stop program use Ctrl-C or send it SIGINT in any other way.
