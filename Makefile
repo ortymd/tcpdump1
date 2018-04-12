@@ -4,7 +4,7 @@ LDLIBS=-l:libpcap.a -l:functions.o
 
 all: main functions
 
-main: main.o functions
+main: main.o functions ./include/functions.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ main.o $(LDLIBS)
 
 export LDFLAGS+=-L./src/

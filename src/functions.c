@@ -11,6 +11,7 @@ static const unsigned input_sz = 1<<3;
 #define arr_sz 1<<5 
 mac_data mac_arr[arr_sz];	// here we store macs and their quantity
 static unsigned cur_sz = 0;
+extern pcap_t *dev_handle;
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
 	char user_input[input_sz];
@@ -18,11 +19,11 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 
 	print_active_devs(alldevsp);
 	while ( chosen_dev == NULL ) {
-#define TEST
 #ifdef TEST
 		strncpy(user_input, "enp0s8", 6);
+		printf("Chosen device: %s\n", user_input);
 #else
-		printf("Choose device. Input 0 for exit:\n");
+		printf("Input device. Input 0 for exit:\n");
 		scanf("%[^\n]%*c", user_input);
 #endif
 
@@ -130,4 +131,16 @@ int dump_data() {
 	}
 	fclose(log);
 	return 0;
+}
+
+int setup_signal(struct sigaction *act){
+	act->sa_handler = call_pcap_breakloop;
+	sigaction(SIGINT, act, 0);
+
+	return 0;
+}
+
+void call_pcap_breakloop(int signal){
+	printf("Stopping pcap.\n");
+	pcap_breakloop(dev_handle);
 }
