@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-
 	if( pcap_findalldevs(alldevsp, errbuf) != 0 ) {
 		fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
 		return 2;

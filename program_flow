@@ -12,3 +12,10 @@ pcap_setfilter()
 
 check options		--	getopt()
 check devices
+
+pcap_loop
+	get_addr(buf, mac1, mac2, (*f_mac))		
+	get_addr(buf, ip1, ip2, (*f_ip))
+
+	fmac(buf, mac1, mac2);
+	fip(buf, ip1, ip2);

@@ -2,14 +2,15 @@
 #include <pcap.h>
 #include <string.h>
 #include <linux/if_ether.h>
+#include <linux/ip.h>
 #include <netinet/ether.h>
 
 #include <functions.h>
-#include <mac_data.h>
+#include <log_data.h>
 
 static const unsigned input_sz = 1<<3;
 #define arr_sz 1<<5 
-mac_data mac_arr[arr_sz];	// here we store macs and their quantity
+log_data log_arr[arr_sz];	// here we store logs and their quantity
 static unsigned cur_sz = 0;
 extern pcap_t *dev_handle;
 
@@ -67,21 +68,21 @@ pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp){
 
 	return dev;
 }
-
-void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
+/*
+#ifdef SKIP_THIS
+void parse_packet1(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
 	static u_char mac_dest[macsize];
 	static u_char mac_src[macsize];
 	static mac_data *mac_tmp;
 
 	get_mac(bufptr, mac_dest, mac_src);	
+	//get_ip(bufptr, mac_dest, mac_src);	
 
 	mac_tmp = find(mac_dest, mac_src, mac_arr, cur_sz);
 	if( mac_tmp == NULL )
 	{
-		for (unsigned j=0; j < macsize; ++j){
-			mac_arr[cur_sz].dest[j] |= mac_dest[j];
-			mac_arr[cur_sz].src[j] |= mac_src[j];
-		}
+		memcpy(mac_arr[cur_sz].dest, mac_dest, macsize);
+		memcpy(mac_arr[cur_sz].src, mac_src, macsize);
 		mac_arr[cur_sz].cnt += 1;
 		++cur_sz;
 	}
@@ -90,32 +91,51 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 		mac_tmp->cnt += 1;
 	}
 }
+#endif
+*/
 
-mac_data* find(u_char *mac_dest, u_char *mac_src, mac_data *arr, unsigned cur_sz) {
+void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
+	static u_char *mac_dest;
+	static u_char *mac_src;
+	static u_char *ip_dest;
+	static u_char *ip_src;
+	static log_data *log_tmp;
+
+	get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src);	//get_ip(bufptr, mac_dest, mac_src);	
+
+	log_tmp = find(ip_dest, ip_src, log_arr, cur_sz);
+	if( log_tmp == NULL )
+	{
+		memcpy(log_arr[cur_sz].ip.dest, ip_dest, ipsize);
+		memcpy(log_arr[cur_sz].ip.src, ip_src, ipsize);
+		memcpy(log_arr[cur_sz].mac.dest, mac_dest, macsize);
+		memcpy(log_arr[cur_sz].mac.src, mac_src, macsize);
+		log_arr[cur_sz].cnt += 1;
+		++cur_sz;
+	}
+	else
+	{
+		log_tmp->cnt += 1;
+	}
+}
+
+log_data* find(u_char *ip_dest, u_char *ip_src, log_data *arr, unsigned cur_sz) {
 	for (unsigned i=0; i < cur_sz; ++i) {
-		if( memcmp(mac_dest, arr[i].dest, macsize) == 0 && memcmp(mac_src, arr[i].src, macsize) == 0 ) 
-				return &arr[i];
+		if( memcmp(ip_dest, log_arr[i].ip.dest, ipsize) == 0 && memcmp(ip_src, log_arr[i].ip.src, ipsize) == 0 ) 
+				return &log_arr[i];
 		}
 	return NULL;
 }
 
-int get_mac1(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
+int get_log(const u_char *bufptr, u_char **mac_dest,  u_char **mac_src, u_char **ip_dest,  u_char **ip_src)
 {
-	struct ethhdr *eth = (struct ethhdr *)bufptr;
+	struct ethhdr *eth = (struct ethhdr*)bufptr;
+	*mac_dest = eth->h_dest;
+	*mac_src = eth->h_source;
 
-	for (unsigned j=0; j < macsize; ++j){
-			mac_dest[j] |= eth->h_dest[j];
-			mac_src[j] |= eth->h_source[j];
-	}
-
-	return 0;
-}
-
-int get_mac(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
-{
-	struct ethhdr *eth = (struct ethhdr *)bufptr;
-	memcpy(mac_dest, eth->h_dest, macsize);
-	memcpy(mac_src, eth->h_source, macsize);
+	struct iphdr *ip = (struct iphdr*)(bufptr + sizeof(struct ethhdr));
+	*ip_dest = &ip->daddr;
+	*ip_src = &ip->saddr;
 			
 	return 0;
 }
@@ -125,9 +145,13 @@ int dump_data() {
 	log = fopen("log.txt", "a");
 
 	for( unsigned i = 0; i < cur_sz; ++i) {
-			fprintf(log, "\ndest:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].dest[0], mac_arr[i].dest[1],mac_arr[i].dest[2],mac_arr[i].dest[3],mac_arr[i].dest[4],mac_arr[i].dest[5]);
-			fprintf(log, "src:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].src[0], mac_arr[i].src[1],mac_arr[i].src[2],mac_arr[i].src[3],mac_arr[i].src[4],mac_arr[i].src[5]);
-			fprintf(log, "count:\t%d\n", mac_arr[i].cnt);
+		fprintf(log, "\nip dest:\t%hhu.%hhu.%hhu.%hhu\n", log_arr[i].ip.dest[0], log_arr[i].ip.dest[1], log_arr[i].ip.dest[2], log_arr[i].ip.dest[3]);
+		fprintf(log, "ip  src:\t%hhu.%hhu.%hhu.%hhu\n", log_arr[i].ip.src[0], log_arr[i].ip.src[1], log_arr[i].ip.src[2], log_arr[i].ip.src[3]);
+
+		fprintf(log, "mac dest:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", log_arr[i].mac.dest[0], log_arr[i].mac.dest[1],log_arr[i].mac.dest[2],log_arr[i].mac.dest[3],log_arr[i].mac.dest[4],log_arr[i].mac.dest[5]);
+		fprintf(log, "mac src:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", log_arr[i].mac.src[0], log_arr[i].mac.src[1],log_arr[i].mac.src[2],log_arr[i].mac.src[3],log_arr[i].mac.src[4],log_arr[i].mac.src[5]);
+
+		fprintf(log, "count:\t%d\n", log_arr[i].cnt);
 	}
 	fclose(log);
 	return 0;
