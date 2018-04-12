@@ -68,31 +68,6 @@ pcap_if_t* find_device(char *user_input, pcap_if_t **alldevsp){
 
 	return dev;
 }
-/*
-#ifdef SKIP_THIS
-void parse_packet1(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
-	static u_char mac_dest[macsize];
-	static u_char mac_src[macsize];
-	static mac_data *mac_tmp;
-
-	get_mac(bufptr, mac_dest, mac_src);	
-	//get_ip(bufptr, mac_dest, mac_src);	
-
-	mac_tmp = find(mac_dest, mac_src, mac_arr, cur_sz);
-	if( mac_tmp == NULL )
-	{
-		memcpy(mac_arr[cur_sz].dest, mac_dest, macsize);
-		memcpy(mac_arr[cur_sz].src, mac_src, macsize);
-		mac_arr[cur_sz].cnt += 1;
-		++cur_sz;
-	}
-	else
-	{
-		mac_tmp->cnt += 1;
-	}
-}
-#endif
-*/
 
 void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufptr){
 	static u_char *mac_dest;
@@ -101,7 +76,7 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	static u_char *ip_src;
 	static log_data *log_tmp;
 
-	get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src);	//get_ip(bufptr, mac_dest, mac_src);	
+	get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src);
 
 	log_tmp = find(ip_dest, ip_src, log_arr, cur_sz);
 	if( log_tmp == NULL )
@@ -117,6 +92,10 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	{
 		log_tmp->cnt += 1;
 	}
+	mac_dest = NULL;
+	mac_src = NULL;
+	ip_dest = NULL;
+	ip_src = NULL;
 }
 
 log_data* find(u_char *ip_dest, u_char *ip_src, log_data *arr, unsigned cur_sz) {
