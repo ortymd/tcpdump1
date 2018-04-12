@@ -18,10 +18,13 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 
 	print_active_devs(alldevsp);
 	while ( chosen_dev == NULL ) {
+#define TEST
+#ifdef TEST
+		strncpy(user_input, "enp0s8", 6);
+#else
 		printf("Choose device. Input 0 for exit:\n");
-		//FILE *in = fdopen(stdin->_fileno, "r");
-		//fread(user_input, 1, input_sz, in);
-		scanf("%[^\n]%*c", user_input);	//	sz indicates max len to scan. see man 3 scanf(line 83)
+		scanf("%[^\n]%*c", user_input);
+#endif
 
 		if(strncmp(user_input, "0", 1) == 0){
 			break;
@@ -89,24 +92,10 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 
 mac_data* find(u_char *mac_dest, u_char *mac_src, mac_data *arr, unsigned cur_sz) {
 	for (unsigned i=0; i < cur_sz; ++i) {
-		for (unsigned j=0; j < macsize; ++j){
-			if( (mac_dest[j] ^ arr[i].dest[j]) == 0 && (mac_src[j] ^ arr[i].src[j]) == 0 ) 
-				return &arr[j];
+		if( memcmp(mac_dest, arr[i].dest, macsize) == 0 && memcmp(mac_src, arr[i].src, macsize) == 0 ) 
+				return &arr[i];
 		}
-	}
 	return NULL;
-}
-
-int get_mac(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
-{
-	struct ethhdr *eth = (struct ethhdr *)bufptr;
-
-	for (unsigned j=0; j < macsize; ++j){
-			mac_dest[j] |= eth->h_dest[j];
-			mac_src[j] |= eth->h_source[j];
-	}
-
-	return 0;
 }
 
 int get_mac1(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
@@ -121,13 +110,22 @@ int get_mac1(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
 	return 0;
 }
 
+int get_mac(const u_char *bufptr, u_char *mac_dest,  u_char *mac_src)
+{
+	struct ethhdr *eth = (struct ethhdr *)bufptr;
+	memcpy(mac_dest, eth->h_dest, macsize);
+	memcpy(mac_src, eth->h_source, macsize);
+			
+	return 0;
+}
+
 int dump_data() {
 	FILE *log;
 	log = fopen("log.txt", "a");
 
 	for( unsigned i = 0; i < cur_sz; ++i) {
-			fprintf(log, "dest:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].dest[0], mac_arr[i].dest[1],mac_arr[i].dest[2],mac_arr[i].dest[3],mac_arr[i].dest[4],mac_arr[i].dest[5]);
-			fprintf(log, "src:\t%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", mac_arr[i].src[0], mac_arr[i].src[1],mac_arr[i].src[2],mac_arr[i].src[3],mac_arr[i].src[4],mac_arr[i].src[5]);
+			fprintf(log, "\ndest:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].dest[0], mac_arr[i].dest[1],mac_arr[i].dest[2],mac_arr[i].dest[3],mac_arr[i].dest[4],mac_arr[i].dest[5]);
+			fprintf(log, "src:\t%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx:%.2hhx\n", mac_arr[i].src[0], mac_arr[i].src[1],mac_arr[i].src[2],mac_arr[i].src[3],mac_arr[i].src[4],mac_arr[i].src[5]);
 			fprintf(log, "count:\t%d\n", mac_arr[i].cnt);
 	}
 	fclose(log);
