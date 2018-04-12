@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
 		dump_data();
 	}
 
-	
-
 	printf("Done.\n");
 	return 0;
 }
