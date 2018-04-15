@@ -19,3 +19,6 @@ pcap_loop
 
 	fmac(buf, mac1, mac2);
 	fip(buf, ip1, ip2);
+
+pcap_compile()
+pcap_setfilter()

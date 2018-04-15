@@ -9,7 +9,11 @@ main: main.o functions ./include/functions.h
 
 export LDFLAGS+=-L./src/
 
-.PHONY:	functions
+.PHONY:	functions clean
+
 functions:
 	$(MAKE) -C src/
+
+clean:
+	rm *.o src/*.o
 

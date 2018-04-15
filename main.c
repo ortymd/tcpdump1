@@ -13,7 +13,11 @@ int main(int argc, char *argv[])
 	int snaplen = 1<<12;
 	int timeout = 1<<10;
 	int promisc_mode = 0, result;
+#if TEST
+	int cnt = 40;
+#else
 	int	cnt = -1;
+#endif
 	pcap_if_t **alldevsp = malloc( num_of_devices * sizeof(pcap_if_t) );
 	pcap_if_t *chosen_dev = NULL;
 

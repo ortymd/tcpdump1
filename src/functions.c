@@ -21,7 +21,7 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 	print_active_devs(alldevsp);
 	FILE *f = fdopen(0, "r");
 	while ( chosen_dev == NULL ) {
-#ifdef TEST
+#if TEST
 		strncpy(user_input, "enp0s8", 6);
 		printf("Chosen device: %s\n", user_input);
 #else
@@ -82,21 +82,22 @@ void parse_packet(u_char *args, const struct pcap_pkthdr *h, const u_char *bufpt
 	static u_char *ip_src = NULL;
 	static log_data *log_tmp = NULL;
 
-	get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src);
+	if (get_log(bufptr, &mac_dest, &mac_src, &ip_dest, &ip_src) == 0){
 
-	log_tmp = find(ip_dest, ip_src, log_arr, cur_sz);
-	if( log_tmp == NULL )
-	{
-		memcpy(log_arr[cur_sz].ip.dest, ip_dest, ipsize);
-		memcpy(log_arr[cur_sz].ip.src, ip_src, ipsize);
-		memcpy(log_arr[cur_sz].mac.dest, mac_dest, macsize);
-		memcpy(log_arr[cur_sz].mac.src, mac_src, macsize);
-		log_arr[cur_sz].cnt += 1;
-		++cur_sz;
-	}
-	else
-	{
-		log_tmp->cnt += 1;
+		log_tmp = find(ip_dest, ip_src, log_arr, cur_sz);
+		if( log_tmp == NULL )
+		{
+			memcpy(log_arr[cur_sz].ip.dest, ip_dest, ipsize);
+			memcpy(log_arr[cur_sz].ip.src, ip_src, ipsize);
+			memcpy(log_arr[cur_sz].mac.dest, mac_dest, macsize);
+			memcpy(log_arr[cur_sz].mac.src, mac_src, macsize);
+			log_arr[cur_sz].cnt += 1;
+			++cur_sz;
+		}
+		else
+		{
+			log_tmp->cnt += 1;
+		}
 	}
 }
 
@@ -110,15 +111,26 @@ log_data* find(u_char *ip_dest, u_char *ip_src, log_data *arr, unsigned cur_sz) 
 
 int get_log(const u_char *bufptr, u_char **mac_dest,  u_char **mac_src, u_char **ip_dest,  u_char **ip_src)
 {
+	static const unsigned ethsz = sizeof(struct ethhdr); 
+	static const unsigned min_iphdr_sz = 20;
+	unsigned check = 0;
+	#define IP_HL(ip) ((((ip)->ihl) & 0x0f)*4)
 	struct ethhdr *eth = (struct ethhdr*)bufptr;
+
 	*mac_dest = eth->h_dest;
 	*mac_src = eth->h_source;
 
-	struct iphdr *ip = (struct iphdr*)(bufptr + sizeof(struct ethhdr));
-	*ip_dest = &ip->daddr;
-	*ip_src = &ip->saddr;
-			
-	return 0;
+	struct iphdr *ip = (struct iphdr*)(bufptr + ethsz);
+	unsigned iphdr_sz = IP_HL(ip);
+	if (iphdr_sz < min_iphdr_sz){
+		check = 1;	// corrupted IP header -> discard
+	}
+	else{
+		*ip_dest = &ip->daddr;
+		*ip_src = &ip->saddr;
+	}
+
+	return check;
 }
 
 int dump_data() {
