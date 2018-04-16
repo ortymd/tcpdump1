@@ -2,17 +2,17 @@
 #include <functions.h>
 #include <string.h>
 
-extern const unsigned input_sz;
 extern char errbuf[PCAP_ERRBUF_SIZE];
+static const unsigned input_sz = 1 << 6;
 
 int setup_filter(pcap_t *dev_handle){
 	char user_input[input_sz];
 	int check = -1;
 	int optimize = 0;
-	struct bpf_program *fp;
+	struct bpf_program fp;
 
 	get_port(user_input);
-	check = pcap_compile(dev_handle, fp, user_input, optimize, PCAP_NETMASK_UNKNOWN);
+	check = pcap_compile(dev_handle, &fp, user_input, optimize, PCAP_NETMASK_UNKNOWN);
 	return check;
 }
 

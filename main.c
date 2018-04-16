@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	int timeout = 1<<10;
 	int promisc_mode = 0, check;
 #if TEST
-	int cnt = 40;
+	int cnt = 5;
 #else
 	int	cnt = -1;
 #endif
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Couldn't open device %s: %s\n", chosen_dev->name, errbuf);
 		return 2;
 	}
-
+#if TEST
 	check = setup_filter(dev_handle);
 	if(check < 0){
 		fprintf(stderr, "pcap_compile failed:\t%s\n", errbuf);
@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 	else{
 		;
 	}
+#endif
 	
 	printf("Starting pcap:\n");
 	check = pcap_loop(dev_handle, cnt, parse_packet, NULL);
