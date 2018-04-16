@@ -2,17 +2,20 @@
 #include <stdlib.h>
 #include <pcap.h>
 #include <functions.h>
+#include <filter.h>
 #include <signal.h>
 #include <errno.h>
 
 pcap_t *dev_handle;
+char errbuf[PCAP_ERRBUF_SIZE];
+
 int main(int argc, char *argv[])
 {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	const size_t num_of_devices = 1<<3;
 	int snaplen = 1<<12;
 	int timeout = 1<<10;
-	int promisc_mode = 0, result;
+	int promisc_mode = 0, check;
 #if TEST
 	int cnt = 40;
 #else
@@ -22,8 +25,8 @@ int main(int argc, char *argv[])
 	pcap_if_t *chosen_dev = NULL;
 
 	struct sigaction act;
-	result = setup_signal(&act);
-	if(result < 0){
+	check = setup_signal(&act);
+	if(check < 0){
 		fprintf(stderr, "Failed to setup signal for application: %d\n", errno );
 		return 2;
 	}
@@ -45,18 +48,28 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
+	check = setup_filter(dev_handle);
+	if(check < 0){
+		fprintf(stderr, "pcap_compile failed:\t%s\n", errbuf);
+		pcap_perror(dev_handle, "pcap failure reason:\t");
+		fprintf(stdin, "\nCapturing on all ports!\n");
+	}
+	else{
+		;
+	}
+	
 	printf("Starting pcap:\n");
-	result = pcap_loop(dev_handle, cnt, parse_packet, NULL);
-	if(result == -1) {
+	check = pcap_loop(dev_handle, cnt, parse_packet, NULL);
+	if(check == -1) {
 		fprintf(stderr, "pcap_loop failed:\t%s\n", errbuf);
 		pcap_perror(dev_handle, "pcap failed reason:\t");
 	}
-	else if(result == -2 ){	// pcap_breakloop called
+	else if(check == -2 ){	// pcap_breakloop called
 		printf("Stopping pcap:\n");
 		printf("Dump data\n");
 		dump_data();
 	}
-	else if(result == 0){
+	else if(check == 0){
 		printf("Dump data\n");
 		dump_data();
 	}

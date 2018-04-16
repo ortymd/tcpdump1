@@ -11,7 +11,7 @@
 #define arr_sz 1<<5 
 log_data log_arr[arr_sz];	// here we store logs and their quantity
 static unsigned cur_sz = 0;
-static const unsigned input_sz = 1<<3;
+const unsigned input_sz = 1<<3;
 extern pcap_t *dev_handle;
 
 pcap_if_t* request_device(pcap_if_t **alldevsp){
@@ -19,18 +19,14 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 	pcap_if_t *chosen_dev = NULL;
 
 	print_active_devs(alldevsp);
-	FILE *f = fdopen(0, "r");
 	while ( chosen_dev == NULL ) {
+
 #if TEST
 		strncpy(user_input, "enp0s8", 6);
 		printf("Chosen device: %s\n", user_input);
 #else
 		printf("Input device. Input 0 for exit:\n");
-
-		fgets(user_input, input_sz, f);
-		unsigned len = strlen(user_input) - 1;
-		if(user_input[len] == '\n')
-			user_input[len] = '\0';
+		get_user_input(user_input);
 #endif
 
 		if(strncmp(user_input, "0", 1) == 0){
@@ -46,7 +42,6 @@ pcap_if_t* request_device(pcap_if_t **alldevsp){
 		print_active_devs(alldevsp);
 	}
 
-	fclose(f);
 	return chosen_dev;
 }
 
@@ -160,4 +155,11 @@ int setup_signal(struct sigaction *act){
 void call_pcap_breakloop(int signal){
 	printf("Stopping pcap.\n");
 	pcap_breakloop(dev_handle);
+}
+
+void get_user_input(char *user_input){
+	fgets(user_input, input_sz, stdin);
+	unsigned len = strlen(user_input) - 1;
+	if(user_input[len] == '\n')
+		user_input[len] = '\0';
 }
