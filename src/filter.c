@@ -12,11 +12,17 @@ int setup_filter(pcap_t *dev_handle){
 	struct bpf_program fp;
 
 	get_port(user_input);
+
 	check = pcap_compile(dev_handle, &fp, user_input, optimize, PCAP_NETMASK_UNKNOWN);
+	if(check < 0){
+		return check;
+	}
+
+	check = pcap_setfilter(dev_handle, &fp);
 	return check;
 }
 
-void get_port(char *user_input){
+int get_port(char *user_input){
 	#if TEST
 
 	printf("Capture packets on port 80(http)\n");
