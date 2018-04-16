@@ -12,3 +12,6 @@ application.
 4. To stop program use Ctrl-C or send it SIGINT in any other way.
 
 5. Number of possible hosts to log is 32.
+
+6. In testing mode(#define TEST 1) default device to capture on is 'enp0s8'
+	change this to a proper ethernet device available at your machine 
